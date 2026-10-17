@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Global Weather App</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:sans-serif}
+body{min-height:100vh;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;padding:20px}
+.card{width:100%;max-width:420px;background:#fffffff2;border-radius:24px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,0.3)}
+h1{text-align:center;font-size:22px}
+.subtitle{text-align:center;font-size:13px;color:#666;margin-top:4px}
+.search{display:flex;gap:8px;margin:20px 0}
+.search input{flex:1;padding:12px 14px;border:2px solid #e2e8f0;border-radius:12px;outline:none}
+.search button{padding:12px 18px;background:#667eea;color:white;border:none;border-radius:12px;font-weight:700;cursor:pointer}
+#weather{text-align:center;display:none;margin-top:10px}
+#weather.show{display:block}
+.temp{font-size:54px;font-weight:800;margin-top:10px}
+.city-name{font-weight:700;margin-top:5px}
+.box{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px}
+.box div{background:#f7fafc;padding:12px;border-radius:12px}
+.quick{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:12px}
+.quick span{background:#edf2f7;padding:6px 12px;border-radius:20px;font-size:12px;cursor:pointer}
+#error{color:#e53e3e;text-align:center;display:none;margin-top:10px;font-size:13px}
+.back-btn{position:fixed;top:15px;left:15px;z-index:9999;background:#111;color:#fff;padding:10px 16px;border-radius:10px;text-decoration:none;font-weight:bold}
+</style>
+</head>
+<body>
+
+<a class="back-btn" href="Portfolio.html">← Back to Portfolio</a>
+
+<div class="card">
+<h1>🌍 Global Weather</h1>
+<p class="subtitle">Search any city in the world</p>
+
+<div class="search">
+<input id="cityInput" placeholder="Search city - e.g. London, Dubai, Tokyo" value="Quetta">
+<button onclick="getWeather()">Search</button>
+</div>
+
+<div class="quick">
+<span onclick="setCity('London')">London</span>
+<span onclick="setCity('Dubai')">Dubai</span>
+<span onclick="setCity('Quetta')">Quetta</span>
+<span onclick="setCity('New York')">New York</span>
+<span onclick="setCity('Tokyo')">Tokyo</span>
+</div>
+
+<div id="error"></div>
+
+<div id="weather">
+<div id="icon" style="font-size:64px">☀️</div>
+<div id="temp" class="temp">--°C</div>
+<div id="city" class="city-name">--</div>
+<div id="desc" style="font-size:13px;color:#666;margin-top:4px">Live Weather Data</div>
+<div class="box">
+<div><small>WIND</small><br><b id="wind">--</b></div>
+<div><small>TIME</small><br><b id="time">--</b></div>
+</div>
+</div>
+</div>
+
+<script>
+function setCity(c){document.getElementById('cityInput').value=c;getWeather();}
+
+async function getWeather(){
+const city=document.getElementById('cityInput').value.trim();
+const err=document.getElementById('error');
+const w=document.getElementById('weather');
+if(!city){err.textContent='Please enter a city name';err.style.display='block';return;}
+err.style.display='none'; w.classList.remove('show'); err.textContent='Loading...'; err.style.display='block';
+try{
+const geo=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${city}&count=1`).then(r=>r.json());
+if(!geo.results) throw new Error('City not found');
+const p=geo.results[0];
+const data=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${p.latitude}&longitude=${p.longitude}&current_weather=true&timezone=auto`).then(r=>r.json());
+const cw=data.current_weather;
+document.getElementById('temp').textContent=Math.round(cw.temperature)+'°C';
+document.getElementById('city').textContent=p.name+', '+p.country;
+document.getElementById('wind').textContent=cw.windspeed+' km/h';
+document.getElementById('time').textContent=cw.time.split('T')[1] || cw.time;
+err.style.display='none'; w.classList.add('show');
+}catch(e){err.textContent=e.message; err.style.display='block';}
+}
+getWeather();
+</script>
+</body>
+</html>
